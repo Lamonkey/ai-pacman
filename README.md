@@ -1,6 +1,6 @@
 # Pacman Ai
 
-Created: January 1, 2023 12:31 AM
+
 
 # What is this Project
 
