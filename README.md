@@ -5,7 +5,7 @@
 # What is this Project
 
 Implemented three different agents, utility, simply-rule-based and learning agents for the game pac-man. 
-![Demo](https://lamonkey.github.io/Pacman_AI/)
+[Demo](https://lamonkey.github.io/Pacman_AI/)
 # Installation
 
 clone the repo and open index.html using browser. All codes are in Vanilla JS 
