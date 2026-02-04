@@ -5368,11 +5368,10 @@ const data = [{
     //@line 1 "src/executive.js"
     let executive = (function () {
         //for observing
-        let framePeriod = 0.0000001; // length of each frame at 60Hz (updates per second)
-        //let framePeriod = 20.0;
-        //for data collection
-        //let framePeriod = 0.0000000001;
-        let gameTime; // virtual time of the last game update
+        const baseFramePeriod = 1000 / 60;
+        let speedMultiplier = 1.0; // updates per render frame
+        let framePeriod = baseFramePeriod / speedMultiplier; // derived for compatibility
+        let updateAccumulator = 0;
 
         let paused = false; // flag for pausing the state updates, while still drawing
         let running = false; // flag for truly stopping everything
@@ -5444,28 +5443,28 @@ const data = [{
 
         let reqFrame; // id of requestAnimationFrame object
         let tick = function (now) {
-            if (gameTime == undefined) {
-                gameTime = now;
-            }
-
             // Update fps counter.
             updateFps(now);
 
-            // Control frame-skipping by only allowing gameTime to lag behind the current time by some amount.
-            let maxFrameSkip = 3;
-            gameTime = Math.max(gameTime, now - maxFrameSkip * framePeriod);
-
             // Prevent any updates from being called when paused.
             if (paused) {
-                gameTime = now;
+                renderer.beginFrame();
+                state.draw();
+                if (hud.isValidState()) {
+                    renderer.renderFunc(hud.draw);
+                }
+                renderer.endFrame();
+                reqFrame = requestAnimationFrame(tick);
+                return;
             }
 
             hud.update();
 
-            // Update the game until the gameTime surpasses the current time.
-            while (gameTime < now) {
+            updateAccumulator += speedMultiplier;
+            let updates = Math.floor(updateAccumulator);
+            updateAccumulator -= updates;
+            for (let i = 0; i < updates; i++) {
                 state.update();
-                gameTime += framePeriod;
             }
 
             // Draw.
@@ -5484,6 +5483,14 @@ const data = [{
 
             getFramePeriod: function () {
                 return framePeriod;
+            },
+            getSpeedMultiplier: function () {
+                return speedMultiplier;
+            },
+            setSpeedMultiplier: function (multiplier) {
+                let next = Math.max(0.25, multiplier);
+                speedMultiplier = next;
+                framePeriod = baseFramePeriod / speedMultiplier;
             },
             //here to change frame rate
             setUpdatesPerSecond: function () {
@@ -6724,6 +6731,28 @@ const data = [{
         switchState(newGameState);
         executive.init();
 
+        let speedLabel = document.getElementById("speed-label");
+        let speedFaster = document.getElementById("speed-faster");
+        let speedSlower = document.getElementById("speed-slower");
+        let updateSpeedLabel = function () {
+            if (speedLabel) {
+                speedLabel.textContent = executive.getSpeedMultiplier().toFixed(2) + "x";
+            }
+        };
+
+        if (speedFaster) {
+            speedFaster.addEventListener("click", function () {
+                executive.setSpeedMultiplier(executive.getSpeedMultiplier() * 1.25);
+                updateSpeedLabel();
+            });
+        }
+        if (speedSlower) {
+            speedSlower.addEventListener("click", function () {
+                executive.setSpeedMultiplier(executive.getSpeedMultiplier() / 1.25);
+                updateSpeedLabel();
+            });
+        }
+        updateSpeedLabel();
 
 
     });
