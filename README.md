@@ -10,6 +10,40 @@ Check out the [Demo](https://lamonkey.github.io/ai-pacman/)
 
 clone the repo and open index.html using browser. All codes are in Vanilla JS 
 
+# Headless Mode
+
+Use the CLI to run simulations without rendering.
+
+```bash
+node headless/cli.mjs --rounds 20 --parallel 4 --maxTicks 20000
+```
+
+Optional: save per-run recordings (large JSON files) for replay.
+
+```bash
+node headless/cli.mjs --rounds 20 --parallel 4 --maxTicks 20000 --saveRuns true
+```
+
+Single run (prints metrics and can write a recording):
+
+```bash
+node headless/run-once.mjs --maxTicks 20000 --output headless/runs/single.json
+```
+
+# Headless UI (Optional)
+
+Run the local UI server:
+
+```bash
+HOST=127.0.0.1 PORT=3001 node headless/server.mjs
+```
+
+Open `http://127.0.0.1:3001` in your browser.
+
+# Replay
+
+Open `replay.html` in a browser and load a recording JSON from `headless/runs/`.
+
 # Credit
 
 The PacMan game is forked form:

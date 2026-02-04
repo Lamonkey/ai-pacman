@@ -1,0 +1,237 @@
+{
+  "rounds": 10000,
+  "parallel": 8,
+  "maxTicks": 20000,
+  "saveRuns": false,
+  "bestScore": 8950,
+  "avgScore": 6622.857142857143,
+  "terminationCounts": {
+    "game_over": 28
+  },
+  "runs": [
+    {
+      "file": null,
+      "score": 2710,
+      "lives": 0,
+      "ticks": 3752,
+      "level": 1,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 4290,
+      "lives": 0,
+      "ticks": 4551,
+      "level": 1,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 4520,
+      "lives": 0,
+      "ticks": 4944,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 3780,
+      "lives": 0,
+      "ticks": 5175,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6730,
+      "lives": 0,
+      "ticks": 6802,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 7730,
+      "lives": 0,
+      "ticks": 7246,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6220,
+      "lives": 0,
+      "ticks": 5038,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6610,
+      "lives": 0,
+      "ticks": 6364,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 5820,
+      "lives": 0,
+      "ticks": 4978,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8730,
+      "lives": 0,
+      "ticks": 4698,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 7450,
+      "lives": 0,
+      "ticks": 7208,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 5170,
+      "lives": 0,
+      "ticks": 5194,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6410,
+      "lives": 0,
+      "ticks": 4882,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 5800,
+      "lives": 0,
+      "ticks": 5257,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6850,
+      "lives": 0,
+      "ticks": 4901,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6880,
+      "lives": 0,
+      "ticks": 7994,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 7240,
+      "lives": 0,
+      "ticks": 5849,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8950,
+      "lives": 0,
+      "ticks": 6337,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8720,
+      "lives": 0,
+      "ticks": 8389,
+      "level": 3,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8580,
+      "lives": 0,
+      "ticks": 6941,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8240,
+      "lives": 0,
+      "ticks": 6637,
+      "level": 3,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 7930,
+      "lives": 0,
+      "ticks": 6359,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6470,
+      "lives": 0,
+      "ticks": 5857,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 5560,
+      "lives": 0,
+      "ticks": 3973,
+      "level": 1,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8260,
+      "lives": 0,
+      "ticks": 6923,
+      "level": 3,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 8350,
+      "lives": 0,
+      "ticks": 6939,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 5070,
+      "lives": 0,
+      "ticks": 4651,
+      "level": 2,
+      "termination": "game_over"
+    },
+    {
+      "file": null,
+      "score": 6370,
+      "lives": 0,
+      "ticks": 4583,
+      "level": 2,
+      "termination": "game_over"
+    }
+  ]
+}

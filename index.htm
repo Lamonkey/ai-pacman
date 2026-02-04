@@ -38,9 +38,36 @@
             color: #FF0;
             font-size: 1.5em;
         }
+        #canvas-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        #speed-controls {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-family: ArcadeR, sans-serif;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 8px;
+            border-radius: 4px;
+        }
+        #speed-controls button {
+            background: #2121ff;
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+        #speed-controls button:hover {
+            background: #3a3aff;
+        }
     </style>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-<script src="pacman.js"></script>
+<script type="module" src="pacman.js"></script>
 
 </head>
 
@@ -49,7 +76,14 @@
 </div>
 
     <div style='font-family: ArcadeR'> </div>
-    <canvas id='canvas'><div id="canvas-warning">Your browser does not support HTML Canvas.  Please upgrade!</div></canvas>
+    <div id="canvas-wrap">
+        <canvas id='canvas'><div id="canvas-warning">Your browser does not support HTML Canvas.  Please upgrade!</div></canvas>
+        <div id="speed-controls">
+            <button id="speed-slower" type="button">Slower</button>
+            <button id="speed-faster" type="button">Faster</button>
+            <span id="speed-label">1.00x</span>
+        </div>
+    </div>
     <canvas id='atlas' style="display:nohne"></canvas>
 
 </body>
