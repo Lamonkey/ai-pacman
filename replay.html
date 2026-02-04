@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pac-Man Replay</title>
+    <style>
+      body {
+        margin: 16px;
+        background: #000;
+        color: #fff;
+        font-family: ArcadeR, system-ui, sans-serif;
+      }
+      #controls {
+        margin: 12px 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      button, input[type="range"] {
+        cursor: pointer;
+      }
+      #canvas-wrap {
+        position: relative;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <input id="file" type="file" accept=".json" />
+      <button id="play">Play</button>
+      <button id="pause">Pause</button>
+      <label>
+        Speed
+        <input id="speed" type="number" min="1" value="1" style="width:60px;" />
+      </label>
+      <input id="seek" type="range" min="0" max="0" value="0" style="width:240px;" />
+      <span id="label">0 / 0</span>
+    </div>
+
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <canvas id="atlas" style="display:none"></canvas>
+    </div>
+
+    <script>
+      window.PACMAN_REPLAY_MODE = true;
+    </script>
+    <script type="module" src="./replay.js"></script>
+  </body>
+</html>

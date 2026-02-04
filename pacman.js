@@ -11,6 +11,10 @@
 
 // ==========================================================================
 import { chooseTargetTile, getNextPellets, maybeShufflePreference } from "./utility-agent.js";
+
+let __pacman_internal = {};
+export const createHeadlessGame = (options = {}) => __pacman_internal.createHeadlessGame(options);
+export const createReplay = (options = {}) => __pacman_internal.createReplay(options);
 // PAC-MAN
 // an accurate remake of the original arcade game
 
@@ -189,6 +193,8 @@ const data = [{
     };
 
     let DEBUG = false;
+    let isBrowser = typeof window !== "undefined";
+    let isReplayMode = isBrowser && window.PACMAN_REPLAY_MODE === true;
 
     //@line 1 "src/game.js"
     //////////////////////////////////////////////////////////////////////////////////////
@@ -281,9 +287,11 @@ const data = [{
     // High Score Persistence
 
     let loadHighScores = function () {
+        if (typeof localStorage === "undefined") {
+            return;
+        }
         let hs;
         let hslen;
-        let i;
         if (localStorage && localStorage.highScores) {
             hs = JSON.parse(localStorage.highScores);
             hslen = hs.length;
@@ -293,6 +301,9 @@ const data = [{
         }
     };
     let saveHighScores = function () {
+        if (typeof localStorage === "undefined") {
+            return;
+        }
         if (localStorage) {
             localStorage.highScores = JSON.stringify(highScores);
         }
@@ -5383,32 +5394,34 @@ const data = [{
         // requestAnimationFrame polyfill by Erik Möller
         // fixes from Paul Irish and Tino Zijdel
 
-        (function () {
-            let lastTime = 0;
-            let vendors = ['ms', 'moz', 'webkit', 'o'];
-            for (let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-                window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-                window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] ||
-                    window[vendors[x] + 'CancelRequestAnimationFrame'];
-            }
+        if (isBrowser) {
+            (function () {
+                let lastTime = 0;
+                let vendors = ['ms', 'moz', 'webkit', 'o'];
+                for (let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                    window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] ||
+                        window[vendors[x] + 'CancelRequestAnimationFrame'];
+                }
 
-            if (!window.requestAnimationFrame)
-                window.requestAnimationFrame = function (callback) {
-                    let currTime = new Date().getTime();
-                    let timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                    let id = window.setTimeout(function () {
-                            callback(currTime + timeToCall);
-                        },
-                        timeToCall);
-                    lastTime = currTime + timeToCall;
-                    return id;
-                };
+                if (!window.requestAnimationFrame)
+                    window.requestAnimationFrame = function (callback) {
+                        let currTime = new Date().getTime();
+                        let timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        let id = window.setTimeout(function () {
+                                callback(currTime + timeToCall);
+                            },
+                            timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
 
-            if (!window.cancelAnimationFrame)
-                window.cancelAnimationFrame = function (id) {
-                    clearTimeout(id);
-                };
-        }());
+                if (!window.cancelAnimationFrame)
+                    window.cancelAnimationFrame = function (id) {
+                        clearTimeout(id);
+                    };
+            }());
+        }
         /**********/
 
         let fps;
@@ -6462,24 +6475,7 @@ const data = [{
                         renderer.endMapClip();
                     },
                     init: function () { // leave
-                        //for now update score here
-                        const score = getScore();
-                        if (extraLives == 0) {
-                            console.log("uploading result...");
-                            const socket = new WebSocket('ws://localhost:8000');
-                            socket.addEventListener('open', function (event) {
-                                socket.send(`${death_location.x},${death_location.y},${num_iter},${score}`);
-                            });
-                            console.log(score);
-                            score_result = 0;
-                        } else {
-                            const socket = new WebSocket('ws://localhost:8000');
-                            socket.addEventListener('open', function (event) {
-                                socket.send(`${death_location.x},${death_location.y},${num_iter},NaN`);
-                            });
-                            console.log("die at " + death_location.x + " " + death_location.y)
-                        }
-                        //death_penalty[death_location.y][death_location.x] += 1;
+                        // death_penalty[death_location.y][death_location.x] += 1;
                         //change to only one life
                         switchState(extraLives == 0 ? overState : readyRestartState);
                         //switchState(true ? overState : readyRestartState);
@@ -6721,39 +6717,239 @@ const data = [{
     //////////////////////////////////////////////////////////////////////////////////////
     // Entry Point
 
-    window.addEventListener("load", function () {
+    let createNoopRenderer = function () {
+        return {
+            beginFrame: function () {},
+            endFrame: function () {},
+            blitMap: function () {},
+            drawScore: function () {},
+            drawActors: function () {},
+            drawReadyMessage: function () {},
+            drawMessage: function () {},
+            drawMap: function () {},
+            renderFunc: function () {},
+            beginMapClip: function () {},
+            endMapClip: function () {},
+            drawFruit: function () {},
+            drawTargets: function () {},
+            setLevelFlash: function () {},
+            drawLevel: function () {},
+            drawLevelNum: function () {},
+            drawLevelText: function () {},
+            erasePellet: function () {},
+            eraseEnergizer: function () {},
+        };
+    };
 
-        loadHighScores();
-        initRenderer();
-        atlas.create();
-        // initSwipe();
-        // let anchor = window.location.hash.substring(1);
+    let getStateName = function () {
+        if (state === playState) return "play";
+        if (state === readyNewState) return "ready_new";
+        if (state === readyRestartState) return "ready_restart";
+        if (state === readyState) return "ready";
+        if (state === deadState) return "dead";
+        if (state === overState) return "over";
+        if (state === finishState) return "finish";
+        return "unknown";
+    };
+
+    let createHeadlessGame = function (options = {}) {
+        const enableLogging = options.enableLogging === true;
+        renderer = createNoopRenderer();
+        map = mapPacman;
+        map.resetCurrent();
+        ai_frame_count = 0;
+        preference = [0.4, 0.3, 0.2, 0.1];
+        target_tile = null;
+
         switchState(newGameState);
-        executive.init();
 
-        let speedLabel = document.getElementById("speed-label");
-        let speedFaster = document.getElementById("speed-faster");
-        let speedSlower = document.getElementById("speed-slower");
-        let updateSpeedLabel = function () {
-            if (speedLabel) {
-                speedLabel.textContent = executive.getSpeedMultiplier().toFixed(2) + "x";
+        let snapshots = [];
+        let tickCount = 0;
+        let lastPacTile = tile_to_string(pacman.tile);
+        let lastStateName = getStateName();
+
+        let buildSnapshot = function () {
+            return {
+                tick: tickCount,
+                score: getScore(),
+                lives: extraLives,
+                level: level,
+                state: getStateName(),
+                map: map.currentTiles ? map.currentTiles.join("") : map.tiles,
+                pacman: {
+                    x: pacman.tile.x,
+                    y: pacman.tile.y,
+                    dirEnum: pacman.dirEnum,
+                    inputDirEnum: pacman.inputDirEnum,
+                },
+                targetTile: target_tile ? { x: target_tile.x, y: target_tile.y } : null,
+                ghosts: ghosts.map(function (g) {
+                    return {
+                        name: g.name,
+                        x: g.tile.x,
+                        y: g.tile.y,
+                        dirEnum: g.dirEnum,
+                        mode: g.mode,
+                        scared: g.scared,
+                    };
+                }),
+            };
+        };
+
+        let maybeRecordSnapshot = function () {
+            if (state !== playState) return;
+            let pacTile = tile_to_string(pacman.tile);
+            if (pacTile !== lastPacTile) {
+                lastPacTile = pacTile;
+                snapshots.push(buildSnapshot());
             }
         };
 
-        if (speedFaster) {
-            speedFaster.addEventListener("click", function () {
-                executive.setSpeedMultiplier(executive.getSpeedMultiplier() * 1.25);
-                updateSpeedLabel();
-            });
-        }
-        if (speedSlower) {
-            speedSlower.addEventListener("click", function () {
-                executive.setSpeedMultiplier(executive.getSpeedMultiplier() / 1.25);
-                updateSpeedLabel();
-            });
-        }
-        updateSpeedLabel();
+        return {
+            step: function (steps = 1) {
+                for (let i = 0; i < steps; i++) {
+                    if (state === overState) break;
+                    state.update();
+                    tickCount++;
+                    if (enableLogging) {
+                        const currentState = getStateName();
+                        if (currentState !== lastStateName) {
+                            console.log(`[headless] state ${lastStateName} -> ${currentState} at tick ${tickCount}`);
+                            lastStateName = currentState;
+                        }
+                    }
+                    maybeRecordSnapshot();
+                }
+            },
+            runUntilGameOver: function (maxTicks = 20000) {
+                let termination = "max_ticks";
+                while (state !== overState && tickCount < maxTicks) {
+                    this.step(1);
+                }
+                if (state === overState) {
+                    termination = "game_over";
+                }
+                this.lastTermination = termination;
+                if (enableLogging) {
+                    console.log(`[headless] termination ${termination} at tick ${tickCount}`);
+                }
+                return termination;
+            },
+            isGameOver: function () {
+                return state === overState;
+            },
+            getRecording: function () {
+                return {
+                    summary: {
+                        score: getScore(),
+                        lives: extraLives,
+                        ticks: tickCount,
+                        level: level,
+                        termination: this.lastTermination || (state === overState ? "game_over" : "max_ticks"),
+                    },
+                    snapshots: snapshots,
+                };
+            },
+            getSnapshotCount: function () {
+                return snapshots.length;
+            },
+        };
+    };
+
+    let createReplay = function () {
+        let initialized = false;
+        let ensureInit = function () {
+            if (initialized) return;
+            initRenderer();
+            atlas.create();
+            map = mapPacman;
+            map.resetCurrent();
+            initialized = true;
+        };
+
+        let applySnapshot = function (snapshot) {
+            if (snapshot.map && map.currentTiles) {
+                map.currentTiles = snapshot.map.split("");
+            }
+            if (snapshot.score != undefined) {
+                setScore(snapshot.score);
+            }
+            if (snapshot.lives != undefined) {
+                extraLives = snapshot.lives;
+            }
+            if (snapshot.level != undefined) {
+                level = snapshot.level;
+            }
+            if (snapshot.pacman) {
+                pacman.setDir(snapshot.pacman.dirEnum);
+                pacman.setPos(snapshot.pacman.x * tileSize + midTile.x, snapshot.pacman.y * tileSize + midTile.y);
+                pacman.inputDirEnum = snapshot.pacman.inputDirEnum;
+            }
+            if (snapshot.ghosts) {
+                for (let i = 0; i < snapshot.ghosts.length; i++) {
+                    let gSnap = snapshot.ghosts[i];
+                    let ghost = ghosts.find(function (g) { return g.name === gSnap.name; });
+                    if (!ghost) continue;
+                    ghost.setDir(gSnap.dirEnum);
+                    ghost.setPos(gSnap.x * tileSize + midTile.x, gSnap.y * tileSize + midTile.y);
+                    ghost.mode = gSnap.mode;
+                    ghost.scared = gSnap.scared;
+                }
+            }
+        };
+
+        return {
+            renderSnapshot: function (snapshot) {
+                ensureInit();
+                applySnapshot(snapshot);
+                renderer.blitMap();
+                renderer.drawScore();
+                renderer.beginMapClip();
+                renderer.drawFruit();
+                renderer.drawActors();
+                renderer.endMapClip();
+            },
+        };
+    };
+
+    __pacman_internal.createHeadlessGame = createHeadlessGame;
+    __pacman_internal.createReplay = createReplay;
+
+    if (isBrowser && !isReplayMode) {
+        window.addEventListener("load", function () {
+
+            loadHighScores();
+            initRenderer();
+            atlas.create();
+            // initSwipe();
+            // let anchor = window.location.hash.substring(1);
+            switchState(newGameState);
+            executive.init();
+
+            let speedLabel = document.getElementById("speed-label");
+            let speedFaster = document.getElementById("speed-faster");
+            let speedSlower = document.getElementById("speed-slower");
+            let updateSpeedLabel = function () {
+                if (speedLabel) {
+                    speedLabel.textContent = executive.getSpeedMultiplier().toFixed(2) + "x";
+                }
+            };
+
+            if (speedFaster) {
+                speedFaster.addEventListener("click", function () {
+                    executive.setSpeedMultiplier(executive.getSpeedMultiplier() * 1.25);
+                    updateSpeedLabel();
+                });
+            }
+            if (speedSlower) {
+                speedSlower.addEventListener("click", function () {
+                    executive.setSpeedMultiplier(executive.getSpeedMultiplier() / 1.25);
+                    updateSpeedLabel();
+                });
+            }
+            updateSpeedLabel();
 
 
-    });
+        });
+    }
 })();

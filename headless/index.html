@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pac-Man Headless Runner</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      body {
+        margin: 24px;
+        background: #f7f7f7;
+        color: #111;
+      }
+      h1 {
+        margin: 0 0 16px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
+      input {
+        padding: 6px 8px;
+        width: 140px;
+      }
+      button {
+        padding: 8px 12px;
+        margin-right: 8px;
+        cursor: pointer;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .stat {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .worker-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .worker-card {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 8px;
+        background: #fafafa;
+      }
+      .worker-card h3 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pac-Man Headless Runner</h1>
+    <div class="card">
+      <div class="row">
+        <label>
+          Parallel Sims
+          <input id="parallel" type="number" min="1" value="2" />
+        </label>
+        <label>
+          Rounds per Sim
+          <input id="rounds" type="number" min="1" value="3" />
+        </label>
+        <label>
+          Max Ticks
+          <input id="maxTicks" type="number" min="1000" value="20000" />
+        </label>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="start">Start</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div><strong>Status</strong></div>
+      <div id="status" class="stat">idle</div>
+      <div id="system" class="stat"></div>
+    </div>
+
+    <div class="card">
+      <div><strong>Workers</strong></div>
+      <div id="workers"></div>
+    </div>
+
+    <div class="card">
+      <div><strong>Runs</strong></div>
+      <ul id="runs"></ul>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
