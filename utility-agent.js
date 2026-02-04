@@ -32,6 +32,17 @@ export const chooseTargetTile = function (opts) {
     const generateAction = opts.generateAction;
     const isGhostInHome = opts.isGhostInHome;
     const preference = opts.preference;
+    const tunnelBonus = typeof opts.tunnelBonus === "number" ? opts.tunnelBonus : 0.4;
+    const normalizeTunnelTile = function (tile) {
+        if (tile.x < 0) {
+            return { x: map.numCols - 1, y: tile.y };
+        }
+        if (tile.x >= map.numCols) {
+            return { x: 0, y: tile.y };
+        }
+        return tile;
+    };
+
     const getNextPelletsFn = opts.getNextPellets || function (tile) {
         return getNextPellets({
             map: map,
@@ -51,14 +62,19 @@ export const chooseTargetTile = function (opts) {
         let tileValue = 0;
         let distanceToPellet = 0;
 
-        if (map.getTile(tile.x, tile.y) == " ") {
-            pelletTile = getNextPelletsFn(tile);
-            distanceToPellet = (aStarSearch(tile, pelletTile, manhattanDistance, null)).length - 1;
+        const evalTile = normalizeTunnelTile(tile);
+
+        if (map.getTile(evalTile.x, evalTile.y) == " ") {
+            pelletTile = getNextPelletsFn(evalTile);
+            distanceToPellet = (aStarSearch(evalTile, pelletTile, manhattanDistance, null)).length - 1;
         } else {
             distanceToPellet = 0;
         }
 
         tileValue = -0.5 * distanceToPellet + preference[generateAction(pacmanTile, tile)];
+        if (map && map.isTunnelTile && map.isTunnelTile(evalTile.x, evalTile.y)) {
+            tileValue += tunnelBonus;
+        }
 
         const safetyValues = [];
         for (let g = 0; g < ghosts.length; g++) {
@@ -68,14 +84,14 @@ export const chooseTargetTile = function (opts) {
             let distanceToGhost = 0;
             let sign = 1;
             let k = 0;
-            if (ghost.scared) {
-                sign = -1;
-                k = 0.43; // safe distance about 5
-                distanceToGhost = (aStarSearch(ghost.tile, tile, manhattanDistance, ghost)).length - 1;
-            } else {
-                k = 2.0;
-                distanceToGhost = (aStarSearch(ghost.tile, tile, manhattanDistance, ghost)).length - 1;
-            }
+                if (ghost.scared) {
+                    sign = -1;
+                    k = 0.43; // safe distance about 5
+                    distanceToGhost = (aStarSearch(ghost.tile, evalTile, manhattanDistance, ghost)).length - 1;
+                } else {
+                    k = 2.0;
+                    distanceToGhost = (aStarSearch(ghost.tile, evalTile, manhattanDistance, ghost)).length - 1;
+                }
 
             const value = sign * 100 / (1 + Math.exp(k * (distanceToGhost - 1.7)));
             if (sign * value > 0.48) safetyValues.push(value);

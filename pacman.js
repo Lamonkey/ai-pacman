@@ -5694,13 +5694,7 @@ const data = [{
             if (isNextTileFloor(current_tile, dir)) {
                 let tile_x = current_tile.x + dir.x;
                 let tile_y = current_tile.y + dir.y;
-                //hard code to prevent teleport TODO enable teleportation
-                if (tile_x < 0 || tile_x > map.numCols || tile_y < 0 || tile_y > map.numRows) continue;
-                // if (tile_y == 17) {
-                //     if (tile_x <= 3 && tile_x >= 24) {
-                //         continue;
-                //     }
-                // }
+                // allow tunnel teleportation (handled by map.isFloorTile / map.getTile)
                 let valid_action = true;
                 //if is ghost can turn 180
                 if (is_ghost) {
@@ -5757,13 +5751,7 @@ const data = [{
                 }
                 let tile_x = current_tile.x + action.x;
                 let tile_y = current_tile.y + action.y;
-                //alow ghsot for teleportation
-                if (tile_x == 4 & tile_y == 17 & ghost == null) {
-                    continue;
-                    //tile_x = map.numCols + 1;
-                } //|| tile_x > map.numCols || tile_y < 0 || tile_y > map.numRows
-                else if (tile_x == 23 & tile_y == 17 & ghost == null) continue;
-                
+                // allow tunnel teleportation (handled by map.isFloorTile / map.getTile)
                 if (tile_x < -2) tile_x = map.numCols + 1;
                 else if(tile_x > map.numCols + 1) tile_x = -2;
                 //allow teleportation for ghost not for agent 
@@ -5794,6 +5782,20 @@ const data = [{
     //calculate manhattan distance
     let manhattan_distance = function (tile1, tile2) {
         return (Math.abs(tile2.x - tile1.x) + Math.abs(tile2.y - tile1.y));
+    }
+
+    //manhattan distance with tunnel-aware shortcuts
+    let manhattan_distance_tunnel = function (tile1, tile2) {
+        let direct = manhattan_distance(tile1, tile2);
+        if (!map || !map.tunnelRows) return direct;
+        let tunnel = map.tunnelRows[tile1.y];
+        if (!tunnel) return direct;
+        // use map edges for tunnel entry/exit
+        let left = { x: 0, y: tile1.y };
+        let right = { x: map.numCols - 1, y: tile1.y };
+        let viaLeft = manhattan_distance(tile1, left) + manhattan_distance(right, tile2);
+        let viaRight = manhattan_distance(tile1, right) + manhattan_distance(left, tile2);
+        return Math.min(direct, viaLeft, viaRight);
     }
 
     //convert tile to  string 
@@ -5944,7 +5946,7 @@ const data = [{
                         real_distances.push(Infinity);
                         continue;
                     }
-                    let real_distance = (a_star_search(ghost.tile, tile, manhattan_distance, true)).length - 1;
+                    let real_distance = (a_star_search(ghost.tile, tile, manhattan_distance_tunnel, true)).length - 1;
                     //let real_distance = manhattan_distance(tile,ghost.tile);
                     real_distances.push(real_distance);
                 }
@@ -6168,6 +6170,9 @@ const data = [{
     let food_target = pacman.tile;
     let evade_target = null;
     let target_tile = null;
+    let debug_click_tile = null;
+    let debug_prev_click = null;
+    let debug_a_star_path = null;
     ////////////////////////////////////////////////////
     // Play state
     // (state when playing the game)
@@ -6212,8 +6217,17 @@ const data = [{
             //ghost are restricted from turning up on these tiles
             // let x = 26;
             // let y = 4;
-            renderer.drawTargets('none', 4, 17);
-            renderer.drawTargets('none', 23, 17);
+            // renderer.drawTargets('none', 4, 17);
+            // renderer.drawTargets('none', 23, 17);
+            if (debug_click_tile) {
+                renderer.drawTargets('none', debug_click_tile.x, debug_click_tile.y);
+            }
+            if (debug_a_star_path && debug_a_star_path.length > 0) {
+                for (let i = 0; i < debug_a_star_path.length; i++) {
+                    let t = debug_a_star_path[i];
+                    renderer.drawTargets('none', t.x, t.y);
+                }
+            }
             // //draw path from ghost to pacman
             // let path = a_star_search(ghosts[0].tile,pacman.tile,manhattan_distance,ghosts[0]);
             // for (let tile of path){
@@ -6293,12 +6307,12 @@ const data = [{
                     getNextPellets: function (tile) {
                         return getNextPellets({
                             map: map,
-                            manhattanDistance: manhattan_distance,
+                            manhattanDistance: manhattan_distance_tunnel,
                             curTile: tile
                         });
                     },
                     aStarSearch: a_star_search,
-                    manhattanDistance: manhattan_distance,
+                    manhattanDistance: manhattan_distance_tunnel,
                     generateAction: generate_action,
                     isGhostInHome: is_ghost_in_home,
                     preference: preference
@@ -6949,6 +6963,34 @@ const data = [{
             }
             updateSpeedLabel();
 
+            let canvasEl = document.getElementById("canvas");
+            if (canvasEl) {
+                console.log("canvas click debug enabled");
+                let handleClick = function (e) {
+                    let rect = canvasEl.getBoundingClientRect();
+                    let px = e.clientX - rect.left;
+                    let py = e.clientY - rect.top;
+                    let scale = renderScale || 1;
+                    let worldX = px / scale - mapMargin - mapPad;
+                    let worldY = py / scale - mapMargin - mapPad;
+                    let tileX = Math.floor(worldX / tileSize);
+                    let tileY = Math.floor(worldY / tileSize);
+                    console.log(`tile: (${tileX}, ${tileY})`);
+                    if (tileX >= 0 && tileX < map.numCols && tileY >= 0 && tileY < map.numRows) {
+                        debug_click_tile = { x: tileX, y: tileY };
+                        if (debug_prev_click) {
+                            debug_a_star_path = a_star_search(debug_prev_click, debug_click_tile, manhattan_distance_tunnel, null);
+                            console.log(`a* shortest path from (${debug_prev_click.x}, ${debug_prev_click.y}) to (${debug_click_tile.x}, ${debug_click_tile.y}) length: ${debug_a_star_path.length}`);
+                        } else {
+                            console.log("a* select another tile to compute path");
+                        }
+                        debug_prev_click = { x: tileX, y: tileY };
+                    }
+                };
+                canvasEl.addEventListener("click", handleClick);
+                canvasEl.addEventListener("pointerdown", handleClick);
+            }
+            document.addEventListener("pointerdown", function () {});
 
         });
     }
